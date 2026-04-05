@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Unit Converter — Class 11</title>
+
+  <!-- Google Fonts: Syne for headings, Space Mono for numbers/code feel
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" /> -->
+
+<style>
+
+/* ── Step 1: Define reusable color variables ──────────
+   CSS variables (--name) let us change one value and
+   it updates everywhere. This is how theme switching works. */
+:root {
+  /* Dark theme colors (default) */
+  --bg:     #0d0d0f;   /* page background      */
+  --bg2:    #141418;   /* input background     */
+  --card:   #1e1e28;   /* card background      */
+  --border: #2e2e3e;   /* border lines         */
+  --text:   #e8e8f4;   /* main text color      */
+  --muted:  #6b6b88;   /* faded / hint text    */
+  --shadow: rgba(0, 0, 0, 0.55);
+  --error:  #ff5555;   /* red for errors       */
+  /* Active accent color — swapped by JavaScript */
+  --accent: #ff6b35;   /* default = orange (Temperature) */
+  /* Typography */
+  --font-head: 'Syne', sans-serif;
+  --font-body: 'Space Mono', monospace;
+  /* Rounded corners */
+  --radius: 12px;
+}
+/* ── Step 2: Light theme ─────────────────────────────
+   When <html data-theme="light">, these colors apply. */
+[data-theme="light"] {
+  --bg:     #f0f0f5;
+  --bg2:    #e2e2ec;
+  --card:   #ffffff;
+  --border: #c8c8da;
+  --text:   #1a1a2e;
+  --muted:  #8888a8;
+  --shadow: rgba(0, 0, 0, 0.12);
+}
+/* ── Step 3: Reset default browser styles ─────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+/* ── Step 4: Body — center everything on screen ───── */
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2rem 1rem 4rem;
+  transition: background 0.3s, color 0.3s;
+}
+/* ── Step 5: Subtle grid on background ───────────── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 44px 44px;
+  pointer-events: none;
+  z-index: 0;
+}
+/* ── Step 6: Wrapper — max width + centered ─────── */
+.wrapper {
+  width: 100%;
+  max-width: 560px;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+/* =====================================================
+   NAVBAR
+   ===================================================== */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.site-title {
+  font-family: var(--font-head);
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+  transition: color 0.3s;
+}
+.theme-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--bg2);
+  color: var(--muted);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.25s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.theme-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: scale(1.08);
+}
+/* =====================================================
+   HEADER
+   ===================================================== */
+.header { text-align: center; }
+.main-title {
+  font-family: var(--font-head);
+  font-size: clamp(2rem, 8vw, 3.2rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: var(--text);
+}
+/* "CONVERTER" — changes color per category */
+.main-title .colored {
+  color: var(--accent);
+  display: block;
+  transition: color 0.35s;
+}
+.header-subtitle {
+  margin-top: 0.5rem;
+  font-size: 0.68rem;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+}
+/* =====================================================
+   TYPE SELECTOR (6 category buttons)
+   ===================================================== */
+.type-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.5rem;
+}
+.type-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.65rem 0.2rem;
+  background: var(--bg2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: 0.58rem;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+.type-btn .icon { font-size: 1.15rem; }
+.type-btn:hover {
+  color: var(--text);
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+.type-btn.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(255, 107, 53, 0.07);
+}
+/* =====================================================
+   MAIN CARD
+   ===================================================== */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 1.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.3rem;
+  box-shadow: 0 30px 60px var(--shadow);
+  transition: background 0.3s, border-color 0.3s;
+}
+/* Small label above each section */
+.section-label {
+  font-size: 0.58rem;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+  margin-bottom: -0.5rem;
+}
+/* ── Direction row ── */
+.direction-row {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+.dir-select {
+  flex: 1;
+  padding: 0.78rem 1rem;
+  background: var(--bg2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.25s;
+}
+.dir-select:focus { border-color: var(--accent); }
+.dir-select option { background: var(--bg2); }
+.swap-btn {
+  width: 44px;
+  height: 44px;
+  background: var(--bg2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--accent);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.swap-btn:hover {
+  background: var(--accent);
+  color: white;
+  transform: rotate(180deg);
+}
+/* ── Two number inputs side by side ── */
+.inputs-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 0.7rem;
+  align-items: center;
+}
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.input-label {
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+.input-inner { position: relative; }
+.number-input {
+  width: 100%;
+  padding: 0.9rem 3rem 0.9rem 0.85rem;
+  background: var(--bg2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 1.1rem;
+  font-weight: 700;
+  outline: none;
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+.number-input::placeholder {
+  color: var(--muted);
+  font-weight: 400;
+  font-size: 0.85rem;
+}
+.number-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.12);
+}
+/* Hide browser spin arrows */
+.number-input::-webkit-outer-spin-button,
+.number-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.number-input[type=number] { -moz-appearance: textfield; }
+/* Unit label inside input (e.g. "°C") */
+.unit-tag {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--accent);
+  pointer-events: none;
+  transition: color 0.3s;
+}
+.bidir-arrow {
+  font-size: 1.1rem;
+  color: var(--muted);
+  text-align: center;
+  user-select: none;
+}
+/* ── Error message ── */
+.error-msg {
+  font-size: 0.7rem;
+  color: var(--error);
+  display: none;
+  align-items: center;
+  gap: 0.4rem;
+  animation: shake 0.4s ease;
+}
+.error-msg.visible { display: flex; }
+/* ── Action buttons ── */
+.actions-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  gap: 0.6rem;
+}
+.action-btn {
+  padding: 0.85rem;
+  border-radius: var(--radius);
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: all 0.25s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border: 1.5px solid var(--border);
+  background: var(--bg2);
+}
+.btn-clear { color: var(--muted); }
+.btn-clear:hover { color: var(--error); border-color: var(--error); }
+.btn-convert {
+  background: var(--accent);
+  border-color: transparent;
+  color: white;
+  font-family: var(--font-head);
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+.btn-convert:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(255, 107, 53, 0.3);
+  filter: brightness(1.1);
+}
+.btn-convert:active { transform: translateY(0); }
+.btn-copy { color: var(--muted); }
+.btn-copy:hover { color: var(--accent); border-color: var(--accent); }
+.btn-copy.copied { color: #34d399; border-color: #34d399; }
+/* ── Formula box ── */
+.formula-box {
+  background: var(--bg2);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 0.85rem 1rem;
+  font-size: 0.72rem;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 44px;
+}
+.formula-box .formula-text {
+  color: var(--accent);
+  font-weight: 700;
+  transition: color 0.3s;
+}
+/* ── Keyboard shortcuts box ── */
+.shortcuts-box {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.9rem 1rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem 1rem;
+}
+.shortcut-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.65rem;
+}
+.shortcut-desc { color: var(--muted); }
+.shortcut-keys { display: flex; gap: 0.25rem; }
+kbd {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.15rem 0.4rem;
+  font-family: var(--font-body);
+  font-size: 0.6rem;
+  color: var(--text);
+}
+
+/* =====================================================
+   ANIMATIONS
+   ===================================================== */
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  20%      { transform: translateX(-6px); }
+  40%      { transform: translateX(6px); }
+  60%      { transform: translateX(-4px); }
+  80%      { transform: translateX(4px); }
+}
+@keyframes popIn {
+  from { transform: scale(0.85); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.pop     { animation: popIn  0.3s cubic-bezier(0.34,1.56,0.64,1) both; }
+.fade-up { animation: fadeUp 0.5s ease both; }
+/* =====================================================
+   RESPONSIVE — for small phone screens
+   ===================================================== */
+@media (max-width: 480px) {
+  .type-grid   { grid-template-columns: repeat(3, 1fr); }
+  .inputs-row  { grid-template-columns: 1fr; }
+  .bidir-arrow { transform: rotate(90deg); }
+  .actions-row { grid-template-columns: 1fr 1fr; }
+  .btn-convert { grid-column: 1 / -1; }
+  .shortcuts-box { grid-template-columns: 1fr; }
+  .card        { padding: 1.3rem; }
+}
+</style>
+</head>
+<body>
+<!--
+  HTML SECTION
+  The structure of the page.
+  Think of it as the skeleton —
+    CSS gives it appearance,
+    JavaScript gives it behaviour.
+-->
+<div class="wrapper fade-up">
+  <!-- ══════════ NAVBAR ══════════ -->
+  <nav class="navbar">
+    <span class="site-title">UNIT CONVERTER</span>
+    <!--
+      onclick="toggleTheme()" calls the JS function
+      when this button is clicked.
+    -->
+    <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="Toggle theme (T)">
+      🌙
+    </button>
+  </nav>
+  <!-- ══════════ PAGE HEADER ══════════ -->
+  <header class="header">
+    <h1 class="main-title">
+      UNIT
+      <!-- This word changes color when category changes -->
+      <span class="colored" id="coloredWord">CONVERTER</span>
+    </h1>
+    <p class="header-subtitle">6 Categories &nbsp;·&nbsp; Made with🪲by Ansh &nbsp;·&nbsp; Dark / Light Mode</p>
+  </header>
+  <!-- ══════════ TYPE SELECTOR (6 buttons) ══════════ -->
+  <!--
+    data-type stores the category key used in JavaScript.
+    onclick calls selectType() passing the button itself and the type.
+  -->
+  <div class="type-grid">
+    <button class="type-btn active" data-type="temp"  onclick="selectType(this, 'temp')">
+      <span class="icon">🌡️</span><span>Temp</span>
+    </button>
+    <button class="type-btn" data-type="dist"  onclick="selectType(this, 'dist')">
+      <span class="icon">📏</span><span>Dist</span>
+    </button>
+    <button class="type-btn" data-type="mass"  onclick="selectType(this, 'mass')">
+      <span class="icon">⚖️</span><span>Mass</span>
+    </button>
+    <button class="type-btn" data-type="speed" onclick="selectType(this, 'speed')">
+      <span class="icon">💨</span><span>Speed</span>
+    </button>
+    <button class="type-btn" data-type="area"  onclick="selectType(this, 'area')">
+      <span class="icon">📐</span><span>Area</span>
+    </button>
+    <button class="type-btn" data-type="time"  onclick="selectType(this, 'time')">
+      <span class="icon">⏱️</span><span>Time</span>
+    </button>
+  </div>
+  <!-- ══════════ MAIN CARD ══════════ -->
+  <div class="card">
+    <!-- ── Step 1: Direction + Swap ── -->
+    <p class="section-label">01 — SELECT CONVERSION DIRECTION</p>
+    <div class="direction-row">
+      <!-- Dropdown: filled by JavaScript -->
+      <select class="dir-select" id="dirSelect" onchange="onDirectionChange()">
+      </select>
+      <!-- Swap: swaps FROM and TO values -->
+      <button class="swap-btn" onclick="swapValues()" title="Swap (S)">⇄</button>
+    </div>
+    <!-- ── Step 2: FROM and TO Inputs ── -->
+    <p class="section-label">02 — ENTER VALUE (TYPE IN EITHER BOX — BOTH ARE LIVE)</p>
+    <div class="inputs-row">
+      <!-- FROM input -->
+      <div class="input-group">
+        <span class="input-label" id="labelFrom">FROM</span>
+        <div class="input-inner">
+          <input
+            class="number-input"
+            id="inputFrom"
+            type="number"
+            placeholder="Enter value…"
+            step="any"
+            autocomplete="off"
+          />
+          <span class="unit-tag" id="unitFrom">°C</span>
+        </div>
+      </div>
+      <span class="bidir-arrow">⟷</span>
+      <!-- TO input -->
+      <div class="input-group">
+        <span class="input-label" id="labelTo">TO</span>
+        <div class="input-inner">
+          <input
+            class="number-input"
+            id="inputTo"
+            type="number"
+            placeholder="Result…"
+            step="any"
+            autocomplete="off"
+          />
+          <span class="unit-tag" id="unitTo">°F</span>
+        </div>
+      </div>
+    </div>
+    <!-- Error message: hidden by default, shown by JS -->
+    <p class="error-msg" id="errorMsg">⚠ Please enter a valid number.</p>
+    <!-- ── Step 3: Buttons ── -->
+    <div class="actions-row">
+      <button class="action-btn btn-clear"   onclick="clearAll()"   title="Clear (Esc)">✕ Clear</button>
+      <button class="action-btn btn-convert" onclick="doConvert()"  title="Convert (Enter)">CONVERT →</button>
+      <button class="action-btn btn-copy"    id="copyBtn" onclick="copyResult()" title="Copy">📋 Copy</button>
+    </div>
+    <!-- ── Step 4: Formula display ── -->
+    <div class="formula-box">
+      <span>📐</span>
+      <span class="formula-text" id="formulaText">Select a conversion type above to begin</span>
+    </div>
+    <!-- ── Step 5: Keyboard shortcuts ── -->
+    <div class="shortcuts-box">
+      <div class="shortcut-row">
+        <span class="shortcut-desc">Convert</span>
+        <span class="shortcut-keys"><kbd>Enter</kbd></span>
+      </div>
+      <div class="shortcut-row">
+        <span class="shortcut-desc">Clear</span>
+        <span class="shortcut-keys"><kbd>Esc</kbd></span>
+      </div>
+      <div class="shortcut-row">
+        <span class="shortcut-desc">Swap values</span>
+        <span class="shortcut-keys"><kbd>S</kbd></span>
+      </div>
+      <div class="shortcut-row">
+        <span class="shortcut-desc">Dark / Light</span>
+        <span class="shortcut-keys"><kbd>T</kbd></span>
+      </div>
+      <div class="shortcut-row">
+        <span class="shortcut-desc">Copy result</span>
+        <span class="shortcut-keys"><kbd>Ctrl</kbd><kbd>C</kbd></span>
+      </div>
+      <div class="shortcut-row">
+        <span class="shortcut-desc">Switch type</span>
+        <span class="shortcut-keys"><kbd>1</kbd>–<kbd>6</kbd></span>
+      </div>
+    </div>
+  </div><!-- end .card -->
+</div><!-- end .wrapper -->
+<script>
+"use strict";
+
+const CONVERSIONS = {
+  /* ── Temperature ── */
+  temp: {
+    color: "#ff6b35",
+    pairs: [
+      {
+        from: "°C", to: "°F",
+        label: "Celsius  →  Fahrenheit",
+        formula: "°F = (°C × 9/5) + 32",
+        fwd: function(v) { return (v * 9 / 5) + 32; },
+        bwd: function(v) { return (v - 32) * 5 / 9; }
+      },
+      {
+        from: "°F", to: "°C",
+        label: "Fahrenheit  →  Celsius",
+        formula: "°C = (°F − 32) × 5/9",
+        fwd: function(v) { return (v - 32) * 5 / 9; },
+        bwd: function(v) { return (v * 9 / 5) + 32; }
+      },
+      {
+        from: "°C", to: "K",
+        label: "Celsius  →  Kelvin",
+        formula: "K = °C + 273.15",
+        fwd: function(v) { return v + 273.15; },
+        bwd: function(v) { return v - 273.15; }
+      },
+      {
+        from: "K", to: "°C",
+        label: "Kelvin  →  Celsius",
+        formula: "°C = K − 273.15",
+        fwd: function(v) { return v - 273.15; },
+        bwd: function(v) { return v + 273.15; }
+      },
+      {
+        from: "°F", to: "K",
+        label: "Fahrenheit  →  Kelvin",
+        formula: "K = (°F − 32) × 5/9 + 273.15",
+        fwd: function(v) { return (v - 32) * 5 / 9 + 273.15; },
+        bwd: function(v) { return (v - 273.15) * 9 / 5 + 32; }
+      }
+    ]
+  },
+
+  /* ── Distance ── */
+  dist: {
+    color: "#3ecfcf",
+    pairs: [
+      {
+        from: "m", to: "km",
+        label: "Meter  →  Kilometer",
+        formula: "km = m ÷ 1000",
+        fwd: function(v) { return v / 1000; },
+        bwd: function(v) { return v * 1000; }
+      },
+      {
+        from: "km", to: "m",
+        label: "Kilometer  →  Meter",
+        formula: "m = km × 1000",
+        fwd: function(v) { return v * 1000; },
+        bwd: function(v) { return v / 1000; }
+      },
+      {
+        from: "m", to: "cm",
+        label: "Meter  →  Centimeter",
+        formula: "cm = m × 100",
+        fwd: function(v) { return v * 100; },
+        bwd: function(v) { return v / 100; }
+      },
+      {
+        from: "m", to: "ft",
+        label: "Meter  →  Feet",
+        formula: "ft = m × 3.28084",
+        fwd: function(v) { return v * 3.28084; },
+        bwd: function(v) { return v / 3.28084; }
+      },
+      {
+        from: "km", to: "mi",
+        label: "Kilometer  →  Mile",
+        formula: "mi = km × 0.621371",
+        fwd: function(v) { return v * 0.621371; },
+        bwd: function(v) { return v / 0.621371; }
+      },
+      {
+        from: "cm", to: "in",
+        label: "Centimeter  →  Inch",
+        formula: "in = cm ÷ 2.54",
+        fwd: function(v) { return v / 2.54; },
+        bwd: function(v) { return v * 2.54; }
+      }
+    ]
+  },
+
+  /* ── Mass ── */
+  mass: {
+    color: "#a78bfa",
+    pairs: [
+      {
+        from: "kg", to: "g",
+        label: "Kilogram  →  Gram",
+        formula: "g = kg × 1000",
+        fwd: function(v) { return v * 1000; },
+        bwd: function(v) { return v / 1000; }
+      },
+      {
+        from: "g", to: "kg",
+        label: "Gram  →  Kilogram",
+        formula: "kg = g ÷ 1000",
+        fwd: function(v) { return v / 1000; },
+        bwd: function(v) { return v * 1000; }
+      },
+      {
+        from: "kg", to: "lb",
+        label: "Kilogram  →  Pound",
+        formula: "lb = kg × 2.20462",
+        fwd: function(v) { return v * 2.20462; },
+        bwd: function(v) { return v / 2.20462; }
+      },
+      {
+        from: "lb", to: "kg",
+        label: "Pound  →  Kilogram",
+        formula: "kg = lb ÷ 2.20462",
+        fwd: function(v) { return v / 2.20462; },
+        bwd: function(v) { return v * 2.20462; }
+      },
+      {
+        from: "g", to: "mg",
+        label: "Gram  →  Milligram",
+        formula: "mg = g × 1000",
+        fwd: function(v) { return v * 1000; },
+        bwd: function(v) { return v / 1000; }
+      },
+      {
+        from: "kg", to: "t",
+        label: "Kilogram  →  Metric Ton",
+        formula: "t = kg ÷ 1000",
+        fwd: function(v) { return v / 1000; },
+        bwd: function(v) { return v * 1000; }
+      }
+    ]
+  },
+
+  /* ── Speed ── */
+  speed: {
+    color: "#fbbf24",
+    pairs: [
+      {
+        from: "m/s", to: "km/h",
+        label: "m/s  →  km/h",
+        formula: "km/h = m/s × 3.6",
+        fwd: function(v) { return v * 3.6; },
+        bwd: function(v) { return v / 3.6; }
+      },
+      {
+        from: "km/h", to: "m/s",
+        label: "km/h  →  m/s",
+        formula: "m/s = km/h ÷ 3.6",
+        fwd: function(v) { return v / 3.6; },
+        bwd: function(v) { return v * 3.6; }
+      },
+      {
+        from: "km/h", to: "mph",
+        label: "km/h  →  mph",
+        formula: "mph = km/h × 0.621371",
+        fwd: function(v) { return v * 0.621371; },
+        bwd: function(v) { return v / 0.621371; }
+      },
+      {
+        from: "mph", to: "km/h",
+        label: "mph  →  km/h",
+        formula: "km/h = mph ÷ 0.621371",
+        fwd: function(v) { return v / 0.621371; },
+        bwd: function(v) { return v * 0.621371; }
+      },
+      {
+        from: "m/s", to: "mph",
+        label: "m/s  →  mph",
+        formula: "mph = m/s × 2.23694",
+        fwd: function(v) { return v * 2.23694; },
+        bwd: function(v) { return v / 2.23694; }
+      }
+    ]
+  },
+
+  /* ── Area ── */
+  area: {
+    color: "#34d399",
+    pairs: [
+      {
+        from: "m²", to: "cm²",
+        label: "m²  →  cm²",
+        formula: "cm² = m² × 10,000",
+        fwd: function(v) { return v * 10000; },
+        bwd: function(v) { return v / 10000; }
+      },
+      {
+        from: "m²", to: "ft²",
+        label: "m²  →  ft²",
+        formula: "ft² = m² × 10.7639",
+        fwd: function(v) { return v * 10.7639; },
+        bwd: function(v) { return v / 10.7639; }
+      },
+      {
+        from: "km²", to: "mi²",
+        label: "km²  →  mi²",
+        formula: "mi² = km² × 0.386102",
+        fwd: function(v) { return v * 0.386102; },
+        bwd: function(v) { return v / 0.386102; }
+      },
+      {
+        from: "ha", to: "m²",
+        label: "Hectare  →  m²",
+        formula: "m² = ha × 10,000",
+        fwd: function(v) { return v * 10000; },
+        bwd: function(v) { return v / 10000; }
+      },
+      {
+        from: "acre", to: "m²",
+        label: "Acre  →  m²",
+        formula: "m² = acre × 4046.86",
+        fwd: function(v) { return v * 4046.86; },
+        bwd: function(v) { return v / 4046.86; }
+      }
+    ]
+  },
+
+  /* ── Time ── */
+  time: {
+    color: "#f472b6",
+    pairs: [
+      {
+        from: "s", to: "min",
+        label: "Second  →  Minute",
+        formula: "min = s ÷ 60",
+        fwd: function(v) { return v / 60; },
+        bwd: function(v) { return v * 60; }
+      },
+      {
+        from: "min", to: "h",
+        label: "Minute  →  Hour",
+        formula: "h = min ÷ 60",
+        fwd: function(v) { return v / 60; },
+        bwd: function(v) { return v * 60; }
+      },
+      {
+        from: "h", to: "day",
+        label: "Hour  →  Day",
+        formula: "day = h ÷ 24",
+        fwd: function(v) { return v / 24; },
+        bwd: function(v) { return v * 24; }
+      },
+      {
+        from: "s", to: "h",
+        label: "Second  →  Hour",
+        formula: "h = s ÷ 3600",
+        fwd: function(v) { return v / 3600; },
+        bwd: function(v) { return v * 3600; }
+      },
+      {
+        from: "day", to: "week",
+        label: "Day  →  Week",
+        formula: "week = day ÷ 7",
+        fwd: function(v) { return v / 7; },
+        bwd: function(v) { return v * 7; }
+      },
+      {
+        from: "s", to: "ms",
+        label: "Second  →  Millisecond",
+        formula: "ms = s × 1000",
+        fwd: function(v) { return v * 1000; },
+        bwd: function(v) { return v / 1000; }
+      }
+    ]
+  }
+}; // end CONVERSIONS
+/* =====================================================
+   PART 2: DOM REFERENCES
+   Get links to HTML elements we need to control.
+   getElementById("id") finds the element with that id.
+   ===================================================== */
+var inputFrom  = document.getElementById("inputFrom");
+var inputTo    = document.getElementById("inputTo");
+var unitFrom   = document.getElementById("unitFrom");
+var unitTo     = document.getElementById("unitTo");
+var labelFrom  = document.getElementById("labelFrom");
+var labelTo    = document.getElementById("labelTo");
+var dirSelect  = document.getElementById("dirSelect");
+var errorMsg   = document.getElementById("errorMsg");
+var formulaEl  = document.getElementById("formulaText");
+var copyBtn    = document.getElementById("copyBtn");
+var themeBtn   = document.getElementById("themeBtn");
+/* =====================================================
+   PART 3: STATE VARIABLES
+   Track what the user currently has selected.
+   ===================================================== */
+var currentType    = "temp"; // which of the 6 types is active
+var currentPairIdx = 0;      // which pair in the dropdown
+var isUpdating     = false;  // prevents infinite loop in bidirectional input
+/* =====================================================
+   PART 4: TYPE SWITCHING
+   Called when user clicks one of the 6 type buttons.
+   ===================================================== */
+function selectType(btn, type) {
+  // Remove 'active' from ALL type buttons
+  var allBtns = document.querySelectorAll(".type-btn");
+  for (var i = 0; i < allBtns.length; i++) {
+    allBtns[i].classList.remove("active");
+  }
+  // Add 'active' to the clicked button
+  btn.classList.add("active");
+  // Update state
+  currentType    = type;
+  currentPairIdx = 0;
+  // Change accent color
+  var color = CONVERSIONS[type].color;
+  document.documentElement.style.setProperty("--accent", color);
+  // Fill dropdown with this type's pairs
+  fillDropdown(type);
+  // Update unit labels and formula
+  updateUnitLabels();
+  updateFormula();
+  // Clear both inputs
+  clearInputs();
+}
+/* =====================================================
+   PART 5: DIRECTION SWITCHING
+   Called when user picks a different option in dropdown.
+   ==================================================== */
+function fillDropdown(type) {
+  // Clear old options
+  dirSelect.innerHTML = "";
+  // Add one <option> per pair
+  var pairs = CONVERSIONS[type].pairs;
+  for (var i = 0; i < pairs.length; i++) {
+    var opt = document.createElement("option");
+    opt.value = i;
+    opt.textContent = pairs[i].label;
+    dirSelect.appendChild(opt);
+  }
+  dirSelect.value = 0;
+}
+function onDirectionChange() {
+  currentPairIdx = parseInt(dirSelect.value);
+  updateUnitLabels();
+  updateFormula();
+  clearInputs();
+}
+// Returns the currently selected pair object
+function getCurrentPair() {
+  return CONVERSIONS[currentType].pairs[currentPairIdx];
+}
+// Updates unit labels inside input boxes (e.g. "°C", "°F")
+function updateUnitLabels() {
+  var pair = getCurrentPair();
+  unitFrom.textContent  = pair.from;
+  unitTo.textContent    = pair.to;
+  labelFrom.textContent = "FROM (" + pair.from + ")";
+  labelTo.textContent   = "TO ("   + pair.to   + ")";
+}
+// Updates the formula display box
+function updateFormula() {
+  formulaEl.textContent = getCurrentPair().formula;
+}
+/* =====================================================
+   PART 6:Made with🪲by Ansh.
+   ===================================================== */
+// Format a number cleanly (no unnecessary decimal places)
+function formatNum(num) {
+  if (num === 0) return "0";
+  var abs = Math.abs(num);
+  if (abs >= 1e9 || (abs < 1e-5 && abs > 0)) {
+    return num.toExponential(4); // very big or very small: use scientific
+  }
+  return String(parseFloat(num.toPrecision(8))); // up to 8 significant figures
+}
+// When user types in FROM box → update TO
+inputFrom.addEventListener("input", function() {
+  if (isUpdating) return;   // stop infinite loop
+  isUpdating = true;
+  hideError();
+  var raw = inputFrom.value.trim();
+  if (raw !== "" && !isNaN(Number(raw))) {
+    var result = getCurrentPair().fwd(parseFloat(raw));
+    inputTo.value = formatNum(result);
+  } else {
+    inputTo.value = "";
+  }
+  isUpdating = false;
+});
+// When user types in TO box → update FROM
+inputTo.addEventListener("input", function() {
+  if (isUpdating) return;
+  isUpdating = true;
+  hideError();
+  var raw = inputTo.value.trim();
+  if (raw !== "" && !isNaN(Number(raw))) {
+    var result = getCurrentPair().bwd(parseFloat(raw));
+    inputFrom.value = formatNum(result);
+  } else {
+    inputFrom.value = "";
+  }
+  isUpdating = false;
+});
+/* =====================================================
+   PART 7: CONVERT BUTTON
+   Validates input, calculates, and shows result.
+   ===================================================== */
+function doConvert() {
+  var raw = inputFrom.value.trim();
+  // Validation: empty or not a number?
+  if (raw === "" || isNaN(Number(raw))) {
+    showError("⚠ Please enter a valid number.");
+    // Shake the input box to alert the user
+    inputFrom.style.animation = "none";
+    void inputFrom.offsetWidth; // force browser to reset
+    inputFrom.style.animation  = "shake 0.4s ease";
+    return; // stop — don't calculate
+  }
+  // Calculate
+  hideError();
+  var val    = parseFloat(raw);
+  var result = getCurrentPair().fwd(val);
+  // Show result with pop animation
+  isUpdating = true;
+  inputTo.value = formatNum(result);
+  isUpdating = false;
+  inputTo.classList.remove("pop");
+  void inputTo.offsetWidth;
+  inputTo.classList.add("pop");
+  updateFormula();
+}
+/* =====================================================
+   PART 8: SWAP BUTTON
+   Swaps FROM and TO values.
+   Also tries to find the reverse pair in dropdown.
+   ===================================================== */
+function swapValues() {
+  // Swap input values
+  var temp         = inputFrom.value;
+  inputFrom.value  = inputTo.value;
+  inputTo.value    = temp;
+  // Try to select the reverse direction in dropdown
+  var pair  = getCurrentPair();
+  var pairs = CONVERSIONS[currentType].pairs;
+  for (var i = 0; i < pairs.length; i++) {
+    if (pairs[i].from === pair.to && pairs[i].to === pair.from) {
+      currentPairIdx  = i;
+      dirSelect.value = i;
+      updateUnitLabels();
+      updateFormula();
+      break;
+    }
+  }
+}
+/* =====================================================
+   PART 9: CLEAR
+   ===================================================== */
+function clearAll() {
+  clearInputs();
+  hideError();
+  formulaEl.textContent = "Select a conversion type above to begin";
+}
+function clearInputs() {
+  inputFrom.value = "";
+  inputTo.value   = "";
+}
+/* =====================================================
+   PART 10: COPY
+   Copies conversion result to clipboard.
+   ===================================================== */
+function copyResult() {
+  var fromVal = inputFrom.value;
+  var toVal   = inputTo.value;
+  if (!fromVal || !toVal) {
+    showError("⚠ Nothing to copy — convert something first.");
+    return;
+  }
+  var pair = getCurrentPair();
+  var text = fromVal + " " + pair.from + " = " + toVal + " " + pair.to;
+  // navigator.clipboard is the modern way to copy text
+  navigator.clipboard.writeText(text).then(function() {
+    copyBtn.textContent = "✓ Copied!";
+    copyBtn.classList.add("copied");
+    // Reset button text after 2 seconds
+    setTimeout(function() {
+      copyBtn.textContent = "📋 Copy";
+      copyBtn.classList.remove("copied");
+    }, 2000);
+  }).catch(function() {
+    showError("⚠ Could not access clipboard.");
+  });
+}
+/* =====================================================
+   PART 11: THEME TOGGLE
+   Switches between dark and light mode.
+   Changes data-theme on <html>, CSS does the rest.
+   ===================================================== */
+function toggleTheme() {
+  var html    = document.documentElement;
+  var current = html.getAttribute("data-theme");
+  if (current === "dark") {
+    html.setAttribute("data-theme", "light");
+    themeBtn.textContent = "☀️";
+  } else {
+    html.setAttribute("data-theme", "dark");
+    themeBtn.textContent = "🌙";
+  }
+}
+/* =====================================================
+   PART 12: ERROR HELPERS
+   ===================================================== */
+function showError(msg) {
+  errorMsg.textContent = msg;
+  errorMsg.classList.add("visible");
+}
+function hideError() {
+  errorMsg.classList.remove("visible");
+}
+// Hide error when user starts typing
+inputFrom.addEventListener("input", hideError);
+inputTo.addEventListener("input", hideError);
+/* =====================================================
+   PART 13: KEYBOARD SHORTCUTS
+   Listen for keyboard events on the whole document.
+   ===================================================== */
+document.addEventListener("keydown", function(e) {
+  var tag     = e.target.tagName;
+  var inInput = (tag === "INPUT" || tag === "SELECT");
+  // Enter → convert
+  if (e.key === "Enter") { doConvert(); return; }
+  // Escape → clear
+  if (e.key === "Escape") { clearAll(); return; }
+  // Below shortcuts only fire when NOT inside an input
+  if (inInput) return;
+  // S → swap
+  if (e.key === "s" || e.key === "S") { swapValues(); return; }
+  // T → toggle theme
+  if (e.key === "t" || e.key === "T") { toggleTheme(); return; }
+  // Ctrl+C → copy result (only if no text selected)
+  if (e.ctrlKey && e.key === "c" && !window.getSelection().toString()) {
+    copyResult();
+    return;
+  }
+  // 1–6 → switch type
+  var typeList = ["temp", "dist", "mass", "speed", "area", "time"];
+  var num = parseInt(e.key);
+  if (num >= 1 && num <= 6) {
+    var type = typeList[num - 1];
+    var btn  = document.querySelector(".type-btn[data-type='" + type + "']");
+    if (btn) selectType(btn, type);
+  }
+});
+/* =====================================================
+   PART 14: INITIALISE
+   This runs automatically when the page loads.
+   Sets up the default state (Temperature selected).
+   ===================================================== */
+(function init() {
+  currentType    = "temp";
+  currentPairIdx = 0;
+  // Apply Temperature's color
+  document.documentElement.style.setProperty("--accent", CONVERSIONS["temp"].color);
+  // Fill dropdown
+  fillDropdown("temp");
+  // Update labels and formula
+  updateUnitLabels();
+  updateFormula();
+  // Focus FROM input so user can start typing right away
+  inputFrom.focus();
+})(); // The () at the end runs this function immediately
+</script>
+</body>
+</html>
